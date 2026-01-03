@@ -207,7 +207,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 id="helloText"> <span class="cursor"></span></h1>
+        <h1 id="helloText">Hello.<span class="cursor"></span></h1>
         
         <div class="loading" id="loadingMessage">Loading names...</div>
         
@@ -244,9 +244,7 @@
 
     <script>
         // API Configuration
-        const API_KEY = 'AIzaSyA-Mjf4pzNIASsK8GaPFu_cAT1eZKiWRtI';
-        const SHEET_ID = '1Nn1juNpr3Fep6VKPPT4brf3C_qKehYE2JZ3PZ0qW5_M';
-        const PARTICIPANT_SHEET = 'participant_table';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwyqSvaqzrdWqu4tI1db4EhC17sOAAb64Y92O0TGR9l3L8oh8ATwUzgmoh64e1NMuGXkw/exec';
 
         // DOM Elements
         const helloText = document.getElementById('helloText');
@@ -271,15 +269,15 @@
         // Typing animation for "Hello" in different languages
         const greetings = [
             'Hello.',
-            'Bonjour.',
-            'こんにちは.',
             'Hola.',
-            'Привет.',
+            'Bonjour.',
             'Ciao.',
-            '안녕하세요.',
             'Hallo.',
             'Olá.',
             '你好.',
+            'こんにちは.',
+            '안녕하세요.',
+            'Привет.',
             'مرحبا.',
             'Namaste.'
         ];
@@ -318,35 +316,30 @@
             
             helloText.innerHTML = currentText + '<span class="cursor"></span>';
             
-            const typingSpeed = isDeleting ? 100 : 200;
+            const typingSpeed = isDeleting ? 50 : 100;
             setTimeout(typeGreeting, typingSpeed);
         }
         
         // Start typing animation
         setTimeout(typeGreeting, 500);
 
-        // Load participant names from Google Sheets
+        // Load participant names from Google Sheets via Apps Script
         async function loadParticipants() {
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${PARTICIPANT_SHEET}?key=${API_KEY}`;
+                const url = `${SCRIPT_URL}?action=getParticipants`;
                 const response = await fetch(url);
                 const data = await response.json();
 
-                if (!data.values || data.values.length === 0) {
-                    throw new Error('No data found in sheet');
+                if (data.error) {
+                    throw new Error(data.error);
                 }
 
-                // Parse data (skip header row)
-                const headers = data.values[0];
-                const nameIndex = headers.indexOf('Name_ID');
-                const aliasIndex = headers.indexOf('Alias');
-                const pronunciationIndex = headers.indexOf('Pronunciation');
+                if (!data.participants || data.participants.length === 0) {
+                    throw new Error('No participants found');
+                }
 
-                participantData = data.values.slice(1).map(row => ({
-                    name: row[nameIndex] || '',
-                    alias: row[aliasIndex] || '',
-                    pronunciation: row[pronunciationIndex] || ''
-                }));
+                // Store participant data
+                participantData = data.participants;
 
                 // Sort names alphabetically
                 participantData.sort((a, b) => a.name.localeCompare(b.name));
@@ -377,28 +370,29 @@
             }
         }
 
-        // Update participant status in Google Sheets
+        // Update participant status via Apps Script
         async function updateParticipantStatus(name, noGameFlag, isNew) {
             try {
-                // Note: This requires OAuth authentication, not just API key
-                // You'll need to set up a backend or use Google Apps Script
-                // For now, this is a placeholder showing what data would be sent
+                let url;
+                if (isNew) {
+                    url = `${SCRIPT_URL}?action=addNewParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=${noGameFlag}`;
+                } else {
+                    url = `${SCRIPT_URL}?action=registerParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=${noGameFlag}`;
+                }
                 
-                console.log('Would update Google Sheets with:', {
-                    name: name,
-                    status: 'Registered',
-                    noGameFlag: noGameFlag,
-                    isNew: isNew
-                });
-
-                // TODO: Implement actual Google Sheets update
-                // This requires either:
-                // 1. A backend service with proper OAuth credentials
-                // 2. Google Apps Script web app
-                // 3. Service account authentication
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error updating participant:', data.error);
+                    return null;
+                }
+                
+                return data;
 
             } catch (error) {
                 console.error('Error updating participant:', error);
+                return null;
             }
         }
 
@@ -455,22 +449,27 @@
             localStorage.setItem('noGameFlag', noGameFlag);
             localStorage.setItem('isNewUser', isAddingNew ? 'true' : 'false');
             
-            // Update Google Sheets
-            await updateParticipantStatus(selectedName, noGameFlag, isAddingNew);
+            // Update Google Sheets via Apps Script
+            const result = await updateParticipantStatus(selectedName, noGameFlag, isAddingNew);
             
             // Get alias and pronunciation
             let alias = '';
             let pronunciation = '';
             
-            if (!isAddingNew) {
+            if (result && result.alias) {
+                alias = result.alias;
+                pronunciation = result.pronunciation || '';
+                localStorage.setItem('partyAlias', alias);
+            } else if (!isAddingNew) {
+                // Fallback: get from cached participant data
                 const participant = participantData.find(p => p.name === selectedName);
                 if (participant) {
                     alias = participant.alias;
-                    pronunciation = participant.pronunciation;
+                    pronunciation = participant.pronunciation || '';
                     localStorage.setItem('partyAlias', alias);
                 }
             } else {
-                // For new users, you'll need to assign an alias manually
+                // New user
                 alias = 'TBD';
                 pronunciation = 'To be assigned';
             }
