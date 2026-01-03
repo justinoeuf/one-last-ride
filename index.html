@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Registration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            color: #000000;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            padding-top: 60px;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #000000;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            border: none;
+            border-bottom: 2px solid #000;
+            border-radius: 0;
+            background: transparent;
+            color: #333;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        input[type="text"] {
+            display: none;
+        }
+
+        input[type="text"].visible {
+            display: block;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            margin-top: 2px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-size: 13px;
+            color: #000000;
+            cursor: pointer;
+            line-height: 1.4;
+        }
+
+        .instruction-text {
+            font-size: 16px;
+            color: #000000;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        button {
+            width: auto;
+            padding: 12px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #333333;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Alias Section */
+        .alias-section {
+            margin-top: 80px;
+            padding-top: 40px;
+            text-align: center;
+        }
+
+        .business-card {
+            background: #ffffff;
+            border: 2px solid #000;
+            padding: 40px 30px;
+            margin: 0 auto 30px;
+            max-width: 320px;
+            box-shadow: 4px 4px 0px #ccc;
+        }
+
+        .alias-name {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #000;
+        }
+
+        .pronunciation {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .greeting-text {
+            font-size: 16px;
+            color: #000;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            text-align: left;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .greeting-text strong {
+            font-weight: 700;
+        }
+
+        .greeting-text em {
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #c62828;
+            padding: 16px;
+            margin: 20px 0;
+            border-radius: 4px;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello.</h1>
+        
+        <div class="loading" id="loadingMessage">Loading names...</div>
+        
+        <form id="registrationForm" class="hidden">
+            <div class="form-group">
+                <select id="nameSelect">
+                    <option value="" disabled selected>Partiful name</option>
+                </select>
+                <input type="text" id="newNameInput" placeholder="Enter your name">
+            </div>
+
+            <div class="checkbox-group hidden" id="gameCheckboxGroup">
+                <input type="checkbox" id="noGameCheckbox">
+                <label for="noGameCheckbox">I won't be able to participate in the party game. (It's going to start around 10:30pm)</label>
+            </div>
+
+            <p class="instruction-text hidden" id="instructionText">Each guest will be given an Alias for the evening, click Continue below to generate yours.</p>
+
+            <button type="submit" id="submitBtn" disabled>Continue</button>
+        </form>
+
+        <!-- Alias Section -->
+        <div class="alias-section hidden" id="aliasSection">
+            <div class="business-card">
+                <div class="alias-name" id="aliasDisplay"></div>
+                <div class="pronunciation" id="pronunciationDisplay"></div>
+            </div>
+
+            <p class="greeting-text" id="greetingText"></p>
+
+            <button id="finishBtn">Finish</button>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_KEY = 'AIzaSyA-Mjf4pzNIASsK8GaPFu_cAT1eZKiWRtI';
+        const SHEET_ID = '1Nn1juNpr3Fep6VKPPT4brf3C_qKehYE2JZ3PZ0qW5_M';
+        const PARTICIPANT_SHEET = 'participant_table';
+
+        // DOM Elements
+        const loadingMessage = document.getElementById('loadingMessage');
+        const registrationForm = document.getElementById('registrationForm');
+        const nameSelect = document.getElementById('nameSelect');
+        const newNameInput = document.getElementById('newNameInput');
+        const gameCheckboxGroup = document.getElementById('gameCheckboxGroup');
+        const instructionText = document.getElementById('instructionText');
+        const noGameCheckbox = document.getElementById('noGameCheckbox');
+        const submitBtn = document.getElementById('submitBtn');
+        const aliasSection = document.getElementById('aliasSection');
+        const aliasDisplay = document.getElementById('aliasDisplay');
+        const pronunciationDisplay = document.getElementById('pronunciationDisplay');
+        const greetingText = document.getElementById('greetingText');
+        const finishBtn = document.getElementById('finishBtn');
+
+        let selectedName = '';
+        let isAddingNew = false;
+        let participantData = [];
+
+        // Load participant names from Google Sheets
+        async function loadParticipants() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${PARTICIPANT_SHEET}?key=${API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (!data.values || data.values.length === 0) {
+                    throw new Error('No data found in sheet');
+                }
+
+                // Parse data (skip header row)
+                const headers = data.values[0];
+                const nameIndex = headers.indexOf('Name_ID');
+                const aliasIndex = headers.indexOf('Alias');
+                const pronunciationIndex = headers.indexOf('Pronunciation');
+
+                participantData = data.values.slice(1).map(row => ({
+                    name: row[nameIndex] || '',
+                    alias: row[aliasIndex] || '',
+                    pronunciation: row[pronunciationIndex] || ''
+                }));
+
+                // Sort names alphabetically
+                participantData.sort((a, b) => a.name.localeCompare(b.name));
+
+                // Populate dropdown
+                participantData.forEach(participant => {
+                    if (participant.name) {
+                        const option = document.createElement('option');
+                        option.value = participant.name;
+                        option.textContent = participant.name;
+                        nameSelect.appendChild(option);
+                    }
+                });
+
+                // Add "Add new" option
+                const addNewOption = document.createElement('option');
+                addNewOption.value = 'add-new';
+                addNewOption.textContent = '+ Add my name';
+                nameSelect.appendChild(addNewOption);
+
+                // Show form
+                loadingMessage.classList.add('hidden');
+                registrationForm.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error loading participants:', error);
+                loadingMessage.innerHTML = '<div class="error">Error loading names. Please refresh the page.</div>';
+            }
+        }
+
+        // Update participant status in Google Sheets
+        async function updateParticipantStatus(name, noGameFlag, isNew) {
+            try {
+                // Note: This requires OAuth authentication, not just API key
+                // You'll need to set up a backend or use Google Apps Script
+                // For now, this is a placeholder showing what data would be sent
+                
+                console.log('Would update Google Sheets with:', {
+                    name: name,
+                    status: 'Registered',
+                    noGameFlag: noGameFlag,
+                    isNew: isNew
+                });
+
+                // TODO: Implement actual Google Sheets update
+                // This requires either:
+                // 1. A backend service with proper OAuth credentials
+                // 2. Google Apps Script web app
+                // 3. Service account authentication
+
+            } catch (error) {
+                console.error('Error updating participant:', error);
+            }
+        }
+
+        // Handle name selection
+        nameSelect.addEventListener('change', function() {
+            if (this.value === 'add-new') {
+                isAddingNew = true;
+                newNameInput.classList.add('visible');
+                newNameInput.focus();
+                gameCheckboxGroup.classList.add('hidden');
+                instructionText.classList.add('hidden');
+                submitBtn.disabled = true;
+            } else {
+                isAddingNew = false;
+                selectedName = this.value;
+                newNameInput.classList.remove('visible');
+                newNameInput.value = '';
+                gameCheckboxGroup.classList.remove('hidden');
+                instructionText.classList.remove('hidden');
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Handle new name input
+        newNameInput.addEventListener('input', function() {
+            selectedName = this.value.trim();
+            if (selectedName) {
+                gameCheckboxGroup.classList.remove('hidden');
+                instructionText.classList.remove('hidden');
+                submitBtn.disabled = false;
+            } else {
+                gameCheckboxGroup.classList.add('hidden');
+                instructionText.classList.add('hidden');
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Handle form submission
+        registrationForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const noGameFlag = noGameCheckbox.checked ? 1 : '';
+            
+            // Store in localStorage
+            localStorage.setItem('partyName', selectedName);
+            localStorage.setItem('noGameFlag', noGameFlag);
+            localStorage.setItem('isNewUser', isAddingNew ? 'true' : 'false');
+            
+            // Update Google Sheets
+            await updateParticipantStatus(selectedName, noGameFlag, isAddingNew);
+            
+            // Get alias and pronunciation
+            let alias = '';
+            let pronunciation = '';
+            
+            if (!isAddingNew) {
+                const participant = participantData.find(p => p.name === selectedName);
+                if (participant) {
+                    alias = participant.alias;
+                    pronunciation = participant.pronunciation;
+                    localStorage.setItem('partyAlias', alias);
+                }
+            } else {
+                // For new users, you'll need to assign an alias manually
+                alias = 'TBD';
+                pronunciation = 'To be assigned';
+            }
+            
+            // Display alias
+            aliasDisplay.textContent = alias;
+            pronunciationDisplay.textContent = pronunciation;
+            greetingText.innerHTML = `Nice to meet you <strong>${alias}</strong>! That's all for now. Make sure you pick up your name when you arrive for the party. If you are staying for the game, there will also be a wallet under your name.<br><br>Click finish to go to the main page, where the game instructions will be when the game starts. Also, if you want any of my stuff, you'll find it there too. —<em>Justin</em>.`;
+            
+            // Show alias section and scroll
+            aliasSection.classList.remove('hidden');
+            setTimeout(() => {
+                aliasSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        });
+
+        // Handle finish button
+        finishBtn.addEventListener('click', function() {
+            window.location.href = 'home.html';
+        });
+
+        // Load participants on page load
+        loadParticipants();
+    </script>
+</body>
+</html>
