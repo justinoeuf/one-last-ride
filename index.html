@@ -32,6 +32,20 @@
             text-align: center;
             margin-bottom: 60px;
             color: #000000;
+            min-height: 50px;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 3px;
+            background-color: #000;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
         }
 
         .form-group {
@@ -193,7 +207,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Hello.</h1>
+        <h1 id="helloText">Hello.<span class="cursor"></span></h1>
         
         <div class="loading" id="loadingMessage">Loading names...</div>
         
@@ -235,6 +249,7 @@
         const PARTICIPANT_SHEET = 'participant_table';
 
         // DOM Elements
+        const helloText = document.getElementById('helloText');
         const loadingMessage = document.getElementById('loadingMessage');
         const registrationForm = document.getElementById('registrationForm');
         const nameSelect = document.getElementById('nameSelect');
@@ -252,6 +267,63 @@
         let selectedName = '';
         let isAddingNew = false;
         let participantData = [];
+
+        // Typing animation for "Hello" in different languages
+        const greetings = [
+            'Hello.',
+            'Hola.',
+            'Bonjour.',
+            'Ciao.',
+            'Hallo.',
+            'Olá.',
+            '你好.',
+            'こんにちは.',
+            '안녕하세요.',
+            'Привет.',
+            'مرحبا.',
+            'Namaste.'
+        ];
+        
+        let currentGreetingIndex = 0;
+        let isDeleting = false;
+        let currentText = '';
+        let charIndex = 0;
+
+        function typeGreeting() {
+            const fullText = greetings[currentGreetingIndex];
+            
+            if (!isDeleting) {
+                // Typing
+                currentText = fullText.substring(0, charIndex + 1);
+                charIndex++;
+                
+                if (charIndex === fullText.length) {
+                    // Pause at end of word
+                    setTimeout(() => {
+                        isDeleting = true;
+                        typeGreeting();
+                    }, 2000);
+                    return;
+                }
+            } else {
+                // Deleting
+                currentText = fullText.substring(0, charIndex - 1);
+                charIndex--;
+                
+                if (charIndex === 0) {
+                    isDeleting = false;
+                    currentGreetingIndex = (currentGreetingIndex + 1) % greetings.length;
+                }
+            }
+            
+            helloText.innerHTML = currentText + '<span class="cursor"></span>';
+            
+            const typingSpeed = isDeleting ? 50 : 100;
+            setTimeout(typeGreeting, typingSpeed);
+        }
+        
+        // Start typing animation
+        setTimeout(typeGreeting, 500);
 
         // Load participant names from Google Sheets
         async function loadParticipants() {
@@ -363,6 +435,14 @@
                 submitBtn.disabled = true;
             }
         });
+        
+        // Prevent form submission when pressing Enter in the text input
+        newNameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                this.blur(); // Close mobile keyboard
+            }
+        });
 
         // Handle form submission
         registrationForm.addEventListener('submit', async function(e) {
@@ -404,7 +484,7 @@
             aliasSection.classList.remove('hidden');
             setTimeout(() => {
                 aliasSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
+            }, 300);
         });
 
         // Handle finish button
