@@ -49,7 +49,26 @@
             font-size: 48px;
             font-weight: 400;
             color: #000000;
-            margin-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        .logout-button {
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.2s;
+        }
+
+        .logout-button:hover {
+            background-color: #333333;
         }
     </style>
 </head>
@@ -62,17 +81,43 @@
 
     <div class="container">
         <h1 id="aliasDisplay">Guest</h1>
+        <button class="logout-button" id="logoutBtn">Logout and Unregister</button>
     </div>
 
     <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
+
         // Get user's alias from localStorage
         const userAlias = localStorage.getItem('partyAlias') || localStorage.getItem('partyName') || 'Guest';
+        const userName = localStorage.getItem('partyName');
         document.getElementById('aliasDisplay').textContent = userAlias;
         
         // Redirect to registration if no user data
-        if (!localStorage.getItem('partyName')) {
+        if (!userName) {
             window.location.href = 'index.html';
         }
+
+        // Handle logout and unregister
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            if (confirm('Are you sure you want to logout and unregister? You will need to register again to access the site.')) {
+                try {
+                    // Clear registration status in Google Sheets
+                    const url = `${SCRIPT_URL}?action=unregisterUser&nameId=${encodeURIComponent(userName)}`;
+                    await fetch(url);
+                    
+                    // Clear localStorage
+                    localStorage.clear();
+                    
+                    // Redirect to registration
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    console.error('Error unregistering:', error);
+                    // Still clear localStorage and redirect even if API fails
+                    localStorage.clear();
+                    window.location.href = 'index.html';
+                }
+            }
+        });
     </script>
 </body>
 </html>
