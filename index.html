@@ -32,7 +32,7 @@
             text-align: center;
             margin-bottom: 60px;
             color: #000000;
-            min-height: 65px;
+            min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -326,6 +326,13 @@
         // Start typing animation
         setTimeout(typeGreeting, 500);
 
+        // Check if user is already registered
+        const existingUser = localStorage.getItem('partyName');
+        if (existingUser) {
+            // User already registered, redirect to home
+            window.location.href = 'home.html';
+        }
+
         // Load participant names from Google Sheets via Apps Script
         async function loadParticipants() {
             try {
@@ -399,6 +406,20 @@
             }
         }
 
+        // Check if name is already registered
+        async function checkIfRegistered(name) {
+            try {
+                const url = `${SCRIPT_URL}?action=checkRegistration&nameId=${encodeURIComponent(name)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                return data;
+            } catch (error) {
+                console.error('Error checking registration:', error);
+                return { registered: false };
+            }
+        }
+
         // Handle name selection
         nameSelect.addEventListener('change', function() {
             if (this.value === 'add-new') {
@@ -446,6 +467,16 @@
             e.preventDefault();
             
             const noGameFlag = noGameCheckbox.checked ? 1 : '';
+            
+            // Check if name is already registered (unless it's a new user)
+            if (!isAddingNew) {
+                const checkResult = await checkIfRegistered(selectedName);
+                
+                if (checkResult.registered) {
+                    alert('This name has already been registered. Please choose a different name or contact the host.');
+                    return;
+                }
+            }
             
             // Store in localStorage
             localStorage.setItem('partyName', selectedName);
