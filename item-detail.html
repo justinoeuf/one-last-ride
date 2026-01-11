@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Detail</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            color: #000000;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            text-decoration: none;
+            cursor: pointer;
+            margin-bottom: 30px;
+        }
+
+        .back-button:hover {
+            background-color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .item-detail {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .item-detail {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .item-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: #ddd;
+        }
+
+        .item-info h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .item-info .detail-row {
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .item-info .detail-label {
+            font-weight: 700;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .item-info .price {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+
+        .item-description {
+            margin: 20px 0;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .claimed-notice {
+            background: #ffebee;
+            padding: 16px;
+            margin: 20px 0;
+            border: 1px solid #c62828;
+            color: #c62828;
+            font-size: 16px;
+        }
+
+        .interested-list {
+            margin: 20px 0;
+            padding: 16px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+
+        .interested-list h3 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .interested-list p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .action-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-button:hover {
+            background-color: #333;
+        }
+
+        .action-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .action-button.secondary {
+            background-color: #fff;
+            color: #000;
+            border: 2px solid #000;
+        }
+
+        .action-button.secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 16px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #c62828;
+            padding: 16px;
+            margin: 20px 0;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="shop.html" class="back-button">← Back</a>
+        
+        <div class="loading" id="loadingMessage">Loading item...</div>
+        
+        <div id="itemContent" style="display: none;">
+            <div class="item-detail">
+                <div>
+                    <img id="itemImage" class="item-image" alt="">
+                </div>
+                
+                <div class="item-info">
+                    <h1 id="itemName"></h1>
+                    <div class="detail-row">
+                        <span class="detail-label">Condition:</span>
+                        <span id="itemCondition"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Category:</span>
+                        <span id="itemCategory"></span>
+                    </div>
+                    <div class="price" id="itemPrice"></div>
+                    
+                    <div class="item-description" id="itemDescription"></div>
+                    
+                    <div id="claimedNotice" style="display: none;"></div>
+                    
+                    <div id="interestedList" style="display: none;"></div>
+                    
+                    <div class="action-buttons" id="actionButtons"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
+        
+        // Get user info
+        const userName = localStorage.getItem('partyName');
+        
+        // Redirect if not logged in
+        if (!userName) {
+            window.location.href = 'index.html';
+        }
+
+        // Get item ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        if (!itemId) {
+            window.location.href = 'shop.html';
+        }
+
+        let currentItem = null;
+
+        // Load item details
+        async function loadItem() {
+            try {
+                const url = `${SCRIPT_URL}?action=getShopItems`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                currentItem = data.items.find(item => item.itemId == itemId);
+                
+                if (!currentItem) {
+                    throw new Error('Item not found');
+                }
+
+                displayItem();
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('itemContent').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading item:', error);
+                document.getElementById('loadingMessage').innerHTML = '<div class="error">Error loading item. Please try again.</div>';
+            }
+        }
+
+        // Display item
+        function displayItem() {
+            const item = currentItem;
+            
+            document.getElementById('itemImage').src = item.imageUrl;
+            document.getElementById('itemImage').alt = item.item;
+            document.getElementById('itemName').textContent = item.item;
+            document.getElementById('itemCondition').textContent = item.condition;
+            document.getElementById('itemCategory').textContent = item.category;
+            document.getElementById('itemPrice').textContent = item.price === 'FREE' ? 'FREE' : `$${item.price}`;
+            document.getElementById('itemDescription').textContent = item.description || 'No description provided.';
+
+            // Check if item is claimed
+            const isClaimed = item.status === 'Claimed';
+            const isClaimedByMe = item.claimedBy === userName;
+            
+            // Check if user is interested
+            const interestedList = item.interested ? item.interested.split(',').map(n => n.trim()) : [];
+            const isInterested = interestedList.includes(userName);
+
+            // Show claimed notice
+            if (isClaimed) {
+                const notice = document.getElementById('claimedNotice');
+                notice.style.display = 'block';
+                notice.className = 'claimed-notice';
+                notice.textContent = `Already claimed by ${item.claimedBy}`;
+            }
+
+            // Show interested list
+            if (interestedList.length > 0) {
+                const list = document.getElementById('interestedList');
+                list.style.display = 'block';
+                list.className = 'interested-list';
+                list.innerHTML = `
+                    <h3>People interested:</h3>
+                    <p>${item.interested}</p>
+                `;
+            }
+
+            // Build action buttons
+            const buttonsContainer = document.getElementById('actionButtons');
+            buttonsContainer.innerHTML = '';
+
+            if (isClaimedByMe) {
+                // User claimed this item - show unclaim button
+                const unclaimBtn = document.createElement('button');
+                unclaimBtn.className = 'action-button secondary';
+                unclaimBtn.textContent = 'Unclaim';
+                unclaimBtn.onclick = unclaimItem;
+                buttonsContainer.appendChild(unclaimBtn);
+            } else if (isClaimed) {
+                // Someone else claimed - show interest button
+                if (isInterested) {
+                    const removeInterestBtn = document.createElement('button');
+                    removeInterestBtn.className = 'action-button secondary';
+                    removeInterestBtn.textContent = 'Remove Interest';
+                    removeInterestBtn.onclick = removeInterest;
+                    buttonsContainer.appendChild(removeInterestBtn);
+                } else {
+                    const interestedBtn = document.createElement('button');
+                    interestedBtn.className = 'action-button';
+                    interestedBtn.textContent = 'Mark as Interested';
+                    interestedBtn.onclick = addInterest;
+                    buttonsContainer.appendChild(interestedBtn);
+                }
+            } else {
+                // Item is available
+                const claimBtn = document.createElement('button');
+                claimBtn.className = 'action-button';
+                claimBtn.textContent = 'Claim';
+                claimBtn.onclick = claimItem;
+                buttonsContainer.appendChild(claimBtn);
+
+                if (isInterested) {
+                    const removeInterestBtn = document.createElement('button');
+                    removeInterestBtn.className = 'action-button secondary';
+                    removeInterestBtn.textContent = 'Remove Interest';
+                    removeInterestBtn.onclick = removeInterest;
+                    buttonsContainer.appendChild(removeInterestBtn);
+                } else {
+                    const interestedBtn = document.createElement('button');
+                    interestedBtn.className = 'action-button secondary';
+                    interestedBtn.textContent = 'Mark as Interested';
+                    interestedBtn.onclick = addInterest;
+                    buttonsContainer.appendChild(interestedBtn);
+                }
+            }
+        }
+
+        // Claim item
+        async function claimItem() {
+            try {
+                const url = `${SCRIPT_URL}?action=claimItem&itemId=${itemId}&userName=${encodeURIComponent(userName)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadItem(); // Reload to update UI
+                } else {
+                    alert(data.message || 'Failed to claim item');
+                }
+            } catch (error) {
+                console.error('Error claiming item:', error);
+                alert('Error claiming item. Please try again.');
+            }
+        }
+
+        // Unclaim item
+        async function unclaimItem() {
+            if (!confirm('Are you sure you want to unclaim this item?')) {
+                return;
+            }
+
+            try {
+                const url = `${SCRIPT_URL}?action=unclaimItem&itemId=${itemId}&userName=${encodeURIComponent(userName)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadItem(); // Reload to update UI
+                } else {
+                    alert(data.message || 'Failed to unclaim item');
+                }
+            } catch (error) {
+                console.error('Error unclaiming item:', error);
+                alert('Error unclaiming item. Please try again.');
+            }
+        }
+
+        // Add interest
+        async function addInterest() {
+            try {
+                const url = `${SCRIPT_URL}?action=addInterest&itemId=${itemId}&userName=${encodeURIComponent(userName)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadItem(); // Reload to update UI
+                } else {
+                    alert(data.message || 'Failed to add interest');
+                }
+            } catch (error) {
+                console.error('Error adding interest:', error);
+                alert('Error adding interest. Please try again.');
+            }
+        }
+
+        // Remove interest
+        async function removeInterest() {
+            try {
+                const url = `${SCRIPT_URL}?action=removeInterest&itemId=${itemId}&userName=${encodeURIComponent(userName)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(data.message);
+                    await loadItem(); // Reload to update UI
+                } else {
+                    alert(data.message || 'Failed to remove interest');
+                }
+            } catch (error) {
+                console.error('Error removing interest:', error);
+                alert('Error removing interest. Please try again.');
+            }
+        }
+
+        // Load item on page load
+        loadItem();
+    </script>
+</body>
+</html>
