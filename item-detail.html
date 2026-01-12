@@ -269,7 +269,7 @@
             document.getElementById('itemDescription').textContent = item.description || 'No description provided.';
 
             // Check if item is claimed
-            const isClaimed = item.status === 'Already Claimed';
+            const isClaimed = item.status === 'Claimed';
             const isClaimedByMe = item.claimedBy === userName;
             
             // Check if user is interested
