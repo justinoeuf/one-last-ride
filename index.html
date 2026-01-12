@@ -158,10 +158,6 @@
             max-width: 320px;
             box-shadow: 4px 4px 0px #ccc;
         }
-        
-        .business-card.hidden-card {
-            display: none;
-        }
 
         .alias-name {
             font-size: 32px;
@@ -238,7 +234,7 @@
 
         <!-- Alias Section -->
         <div class="alias-section hidden" id="aliasSection">
-            <div class="business-card" id="businessCard">
+            <div class="business-card">
                 <div class="alias-name" id="aliasDisplay"></div>
                 <div class="pronunciation" id="pronunciationDisplay"></div>
             </div>
@@ -268,7 +264,6 @@
         const pronunciationDisplay = document.getElementById('pronunciationDisplay');
         const greetingText = document.getElementById('greetingText');
         const finishBtn = document.getElementById('finishBtn');
-        const businessCard = document.getElementById('businessCard');
 
         let selectedName = '';
         let isAddingNew = false;
