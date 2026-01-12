@@ -174,7 +174,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="shop.html" class="back-button">← Back</a>
+        <a href="shop.html" class="back-button" onclick="sessionStorage.setItem('shopScrollPosition', 0); return true;">← Back</a>
         
         <div class="loading" id="loadingMessage">Loading item...</div>
         
@@ -209,7 +209,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4ZOdZ0EbA33tAH9pw3R0Bm8_cigFrhN5ngPqqjlDXiB2J5FBEWRsjnJljuQMa8FcjMQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
         
         // Get user info
         const userName = localStorage.getItem('partyName');
