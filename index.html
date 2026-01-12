@@ -238,7 +238,7 @@
 
         <!-- Alias Section -->
         <div class="alias-section hidden" id="aliasSection">
-            <div class="business-card" id="businessCard">
+            <div class="business-card hidden-card" id="businessCard">
                 <div class="alias-name" id="aliasDisplay"></div>
                 <div class="pronunciation" id="pronunciationDisplay"></div>
             </div>
@@ -251,7 +251,7 @@
 
     <script>
         // API Configuration
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlKG2IPyyUa777K4gfiofiUpAGMofW1dKCY0pHSz0VuULgEwU8kZFxyCcLF0JdkVS20A/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxlyv9AHZWQEG3AHlfTXupGhAF90o91pAOC1oHc49hlOniJiR3oTcdNzbCUFJVO5n_pqQ/exec';
 
         // DOM Elements
         const helloText = document.getElementById('helloText');
@@ -338,6 +338,15 @@
             window.location.href = 'home.html';
         }
 
+        // Update instruction text based on checkbox state
+        noGameCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                instructionText.textContent = "No worries! Click Continue to finish registration.";
+            } else {
+                instructionText.textContent = "Each guest will be given an Alias for the evening, click Continue below to generate yours.";
+            }
+        });
+
         // Load participant names from Google Sheets via Apps Script
         async function loadParticipants() {
             try {
@@ -389,10 +398,15 @@
         async function updateParticipantStatus(name, noGameFlag, isNew) {
             try {
                 let url;
-                if (isNew) {
-                    url = `${SCRIPT_URL}?action=addNewParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=${noGameFlag}`;
+                if (noGameFlag) {
+                    // User opted out of game - use new endpoint for both pre-registered and new users
+                    url = `${SCRIPT_URL}?action=registerNoGame&nameId=${encodeURIComponent(name)}&isNew=${isNew ? 'true' : 'false'}`;
+                } else if (isNew) {
+                    // New user playing game
+                    url = `${SCRIPT_URL}?action=addNewParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=`;
                 } else {
-                    url = `${SCRIPT_URL}?action=registerParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=${noGameFlag}`;
+                    // Pre-registered user playing game
+                    url = `${SCRIPT_URL}?action=registerParticipant&nameId=${encodeURIComponent(name)}&noGameFlag=`;
                 }
                 
                 const response = await fetch(url);
@@ -471,7 +485,11 @@
         registrationForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const noGameFlag = noGameCheckbox.checked ? 1 : '';
+            // Change button to loading state
+            submitBtn.textContent = 'Loading...';
+            submitBtn.disabled = true;
+            
+            const noGameFlag = noGameCheckbox.checked;
             
             // Check if name is already registered (unless it's a new user)
             if (!isAddingNew) {
@@ -479,49 +497,72 @@
                 
                 if (checkResult.registered) {
                     alert('This name has already been registered. Please choose a different name or contact the host.');
+                    submitBtn.textContent = 'Continue';
+                    submitBtn.disabled = false;
                     return;
                 }
             }
             
             // Store in localStorage
             localStorage.setItem('partyName', selectedName);
-            localStorage.setItem('noGameFlag', noGameFlag);
+            localStorage.setItem('noGameFlag', noGameFlag ? '1' : '');
             localStorage.setItem('isNewUser', isAddingNew ? 'true' : 'false');
             
             // Update Google Sheets via Apps Script
             const result = await updateParticipantStatus(selectedName, noGameFlag, isAddingNew);
             
-            // Get alias and pronunciation
+            // Determine which scenario we're in and set up the display accordingly
             let alias = '';
             let pronunciation = '';
+            let showBusinessCard = true;
+            let greetingMessage = '';
             
-            if (result && result.alias) {
-                alias = result.alias;
-                pronunciation = result.pronunciation || '';
-                localStorage.setItem('partyAlias', alias);
-            } else if (!isAddingNew) {
-                // Fallback: get from cached participant data
-                const participant = participantData.find(p => p.name === selectedName);
-                if (participant) {
-                    alias = participant.alias;
-                    pronunciation = participant.pronunciation || '';
+            // Determine the scenario based on result
+            if (noGameFlag) {
+                // Scenarios 2 & 4: User opted out of game (pre-registered or new)
+                showBusinessCard = false;
+                greetingMessage = `Thanks! Since you're not playing the game, there are no further instructions. Click Finish to go to the main page (it will be used for the game). But also, if you want any of my stuff I'm giving away, you'll find it there too. —<em>Justin</em>`;
+            } else if (result && result.gameFull) {
+                // Scenario 5: New user, game slots full
+                showBusinessCard = false;
+                greetingMessage = `Oh no! It looks like the game slots are already full. People who RSVP'd on Partiful have spots reserved for them, but you're next on the list to replace them when Friday comes. Click Finish to go to the main page (it will be used for the game). But also, if you want any of my stuff I'm giving away, you'll find it there too. —<em>Justin</em>`;
+            } else {
+                // Scenarios 1 & 3: User is playing the game and has a slot
+                showBusinessCard = true;
+                
+                if (result && result.alias) {
+                    alias = result.alias;
+                    pronunciation = result.pronunciation || '';
                     localStorage.setItem('partyAlias', alias);
+                } else if (!isAddingNew) {
+                    // Fallback: get from cached participant data
+                    const participant = participantData.find(p => p.name === selectedName);
+                    if (participant) {
+                        alias = participant.alias;
+                        pronunciation = participant.pronunciation || '';
+                        localStorage.setItem('partyAlias', alias);
+                    }
                 }
-            } else {
-                // New user
-                alias = 'TBD';
-                pronunciation = 'To be assigned';
+                
+                greetingMessage = `Nice to meet you <strong>${alias}</strong>! That's all for now. Make sure you pick up your name when you arrive for the party. If you are staying for the game, there will also be a wallet under your name.<br><br>Click Finish to go to the main page, where the game instructions will be when the game starts. Also, if you want any of my stuff, you'll find it there too. —<em>Justin</em>`;
             }
             
-            // Display alias
-            aliasDisplay.textContent = alias;
-            
-            if (pronunciation) {
-                pronunciationDisplay.textContent = 'Pronounced ' + pronunciation + '. Beyond this, for the sake of everyone, accents are discouraged';
+            // Display alias card if applicable
+            if (showBusinessCard) {
+                aliasDisplay.textContent = alias;
+                
+                if (pronunciation) {
+                    pronunciationDisplay.textContent = 'Pronounced ' + pronunciation + '. Beyond this, for the sake of everyone, accents are discouraged';
+                } else {
+                    pronunciationDisplay.textContent = 'For the sake of everyone, accents are discouraged';
+                }
+                
+                businessCard.classList.remove('hidden-card');
             } else {
-                pronunciationDisplay.textContent = 'For the sake of everyone, accents are discouraged';
+                businessCard.classList.add('hidden-card');
             }
-            greetingText.innerHTML = `Nice to meet you <strong>${alias}</strong>! That's all for now. Make sure you pick up your name when you arrive for the party. If you are staying for the game, there will also be a wallet under your name.<br><br>Click finish to go to the main page, where the game instructions will be when the game starts. Also, if you want any of my stuff, you'll find it there too. —<em>Justin</em>.`;
+            
+            greetingText.innerHTML = greetingMessage;
             
             // Show alias section and scroll
             aliasSection.classList.remove('hidden');
