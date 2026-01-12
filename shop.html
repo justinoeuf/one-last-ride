@@ -247,12 +247,10 @@
     <script>
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
         
-        // Get user info
         const userAlias = localStorage.getItem('partyAlias') || localStorage.getItem('partyName') || 'Guest';
         const userName = localStorage.getItem('partyName');
-        document.getElementById('userGreeting').innerHTML = `Hi, ${userAlias}`;
+        document.getElementById('userGreeting').innerHTML = 'Hi, ' + userAlias;
 
-        // Redirect if not logged in
         if (!userName) {
             window.location.href = 'index.html';
         }
@@ -260,15 +258,13 @@
         let allItems = [];
         const conditionOrder = ['Brand new', 'Like new', 'Good', 'Acceptable', 'Mixed'];
 
-        // Save scroll position before navigating
         window.addEventListener('beforeunload', function() {
             sessionStorage.setItem('shopScrollPosition', window.scrollY);
         });
 
-        // Load items
         async function loadItems() {
             try {
-                const url = `${SCRIPT_URL}?action=getShopItems`;
+                const url = SCRIPT_URL + '?action=getShopItems';
                 const response = await fetch(url);
                 const data = await response.json();
 
@@ -277,12 +273,9 @@
                 }
 
                 allItems = data.items || [];
-                console.log('Loaded items:', allItems);
-                console.log('First item:', allItems[0]);
                 renderItems();
                 document.getElementById('loadingMessage').style.display = 'none';
                 
-                // Restore scroll position
                 const savedPosition = sessionStorage.getItem('shopScrollPosition');
                 if (savedPosition) {
                     window.scrollTo(0, parseInt(savedPosition));
@@ -295,29 +288,25 @@
             }
         }
 
-        // Render items
         function renderItems() {
-            let items = [...allItems];
+            let items = allItems.slice();
             const itemsGrid = document.getElementById('itemsGrid');
             const emptyState = document.getElementById('emptyState');
 
-            // Get filter values
             const filterCategory = document.getElementById('filterCategory').value;
             const filterCondition = document.getElementById('filterCondition').value;
             const filterMyItems = document.getElementById('filterMyItems').value;
             const sortBy = document.getElementById('sortBy').value;
 
-            // Apply filters
             if (filterCategory) {
-                items = items.filter(item => {
-                    const categories = item.category ? item.category.toLowerCase().split(',').map(c => c.trim()) : [];
-                    return categories.includes(filterCategory.toLowerCase());
+                items = items.filter(function(item) {
+                    const categories = item.category ? item.category.toLowerCase().split(',').map(function(c) { return c.trim(); }) : [];
+                    return categories.indexOf(filterCategory.toLowerCase()) >= 0;
                 });
             }
 
             if (filterCondition) {
-                items = items.filter(item => {
-                    // Normalize both sides for comparison (trim whitespace, case-insensitive)
+                items = items.filter(function(item) {
                     const itemCondition = (item.condition || '').trim();
                     const filterValue = filterCondition.trim();
                     return itemCondition === filterValue;
@@ -325,19 +314,27 @@
             }
 
             if (filterMyItems === 'my-items') {
-                items = items.filter(item => {
+                items = items.filter(function(item) {
                     const isClaimed = item.claimedBy === userName;
-                    const isInterested = item.interested && item.interested.split(',').map(n => n.trim()).includes(userName);
+                    const isInterested = item.interested && item.interested.split(',').map(function(n) { return n.trim(); }).indexOf(userName) >= 0;
                     return isClaimed || isInterested;
                 });
             }
 
-            // Apply sorting
             if (sortBy === 'price') {
-                items.sort((a, b) => {
-                    const priceA = a.price === 'FREE' ? 0 : parseFloat(a.price.toString().replace('
+                items.sort(function(a, b) {
+                    const priceA = a.price === 'FREE' ? 0 : parseFloat(a.price.toString().replace('$', ''));
+                    const priceB = b.price === 'FREE' ? 0 : parseFloat(b.price.toString().replace('$', ''));
+                    return priceB - priceA;
+                });
+            } else if (sortBy === 'condition') {
+                items.sort(function(a, b) {
+                    const indexA = conditionOrder.indexOf(a.condition);
+                    const indexB = conditionOrder.indexOf(b.condition);
+                    return indexA - indexB;
+                });
+            }
 
-            // Render
             if (items.length === 0) {
                 itemsGrid.innerHTML = '';
                 itemsGrid.style.display = 'none';
@@ -354,27 +351,24 @@
             itemsGrid.style.display = 'grid';
             emptyState.style.display = 'none';
 
-            itemsGrid.innerHTML = items.map(item => {
+            itemsGrid.innerHTML = items.map(function(item) {
                 const isClaimed = item.status === 'Claimed';
-                const priceDisplay = item.price === 'FREE' ? 'FREE' : `${item.price}`;
+                const priceDisplay = item.price === 'FREE' ? 'FREE' : '$' + item.price;
                 const itemName = item.item || 'Untitled';
                 const itemCondition = item.condition || 'N/A';
                 
-                return `
-                    <a href="item-detail.html?id=${item.itemId}" class="item-card ${isClaimed ? 'claimed' : ''}">
-                        <img src="${item.imageUrl || ''}" alt="${itemName}" class="item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E'">
-                        <div class="item-info">
-                            <div class="item-name">${itemName}</div>
-                            <div class="item-details">${itemCondition}</div>
-                            <div class="item-price">${priceDisplay}</div>
-                            ${isClaimed ? '<div class="item-claimed">Claimed</div>' : ''}
-                        </div>
-                    </a>
-                `;
+                return '<a href="item-detail.html?id=' + item.itemId + '" class="item-card ' + (isClaimed ? 'claimed' : '') + '">' +
+                    '<img src="' + (item.imageUrl || '') + '" alt="' + itemName + '" class="item-image" onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E\'">' +
+                    '<div class="item-info">' +
+                    '<div class="item-name">' + itemName + '</div>' +
+                    '<div class="item-details">' + itemCondition + '</div>' +
+                    '<div class="item-price">' + priceDisplay + '</div>' +
+                    (isClaimed ? '<div class="item-claimed">Claimed</div>' : '') +
+                    '</div>' +
+                    '</a>';
             }).join('');
         }
 
-        // Event listeners
         document.getElementById('filterCategory').addEventListener('change', function() {
             this.classList.toggle('active', this.value !== '');
             renderItems();
@@ -392,139 +386,6 @@
         
         document.getElementById('sortBy').addEventListener('change', renderItems);
 
-        // Load items on page load
-        loadItems();
-    </script>
-</body>
-</html>, ''));
-                    const priceB = b.price === 'FREE' ? 0 : parseFloat(b.price.toString().replace('
-
-            // Render
-            if (items.length === 0) {
-                itemsGrid.innerHTML = '';
-                itemsGrid.style.display = 'none';
-                emptyState.style.display = 'block';
-                
-                if (filterMyItems === 'my-items') {
-                    emptyState.textContent = "You haven't taken any of my stuff yet";
-                } else {
-                    emptyState.textContent = "Yeah, I don't have that";
-                }
-                return;
-            }
-
-            itemsGrid.style.display = 'grid';
-            emptyState.style.display = 'none';
-
-            itemsGrid.innerHTML = items.map(item => {
-                const isClaimed = item.status === 'Claimed';
-                const priceDisplay = item.price === 'FREE' ? 'FREE' : `${item.price}`;
-                const itemName = item.item || 'Untitled';
-                const itemCondition = item.condition || 'N/A';
-                
-                return `
-                    <a href="item-detail.html?id=${item.itemId}" class="item-card ${isClaimed ? 'claimed' : ''}">
-                        <img src="${item.imageUrl || ''}" alt="${itemName}" class="item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E'">
-                        <div class="item-info">
-                            <div class="item-name">${itemName}</div>
-                            <div class="item-details">${itemCondition}</div>
-                            <div class="item-price">${priceDisplay}</div>
-                            ${isClaimed ? '<div class="item-claimed">Claimed</div>' : ''}
-                        </div>
-                    </a>
-                `;
-            }).join('');
-        }
-
-        // Event listeners
-        document.getElementById('filterCategory').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('filterCondition').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('filterMyItems').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('sortBy').addEventListener('change', renderItems);
-
-        // Load items on page load
-        loadItems();
-    </script>
-</body>
-</html>, ''));
-                    return priceB - priceA; // High to low
-                });
-            } else if (sortBy === 'condition') {
-                items.sort((a, b) => {
-                    const indexA = conditionOrder.indexOf(a.condition);
-                    const indexB = conditionOrder.indexOf(b.condition);
-                    return indexA - indexB;
-                });
-            }
-
-            // Render
-            if (items.length === 0) {
-                itemsGrid.innerHTML = '';
-                itemsGrid.style.display = 'none';
-                emptyState.style.display = 'block';
-                
-                if (filterMyItems === 'my-items') {
-                    emptyState.textContent = "You haven't taken any of my stuff yet";
-                } else {
-                    emptyState.textContent = "Yeah, I don't have that";
-                }
-                return;
-            }
-
-            itemsGrid.style.display = 'grid';
-            emptyState.style.display = 'none';
-
-            itemsGrid.innerHTML = items.map(item => {
-                const isClaimed = item.status === 'Claimed';
-                const priceDisplay = item.price === 'FREE' ? 'FREE' : `${item.price}`;
-                const itemName = item.item || 'Untitled';
-                const itemCondition = item.condition || 'N/A';
-                
-                return `
-                    <a href="item-detail.html?id=${item.itemId}" class="item-card ${isClaimed ? 'claimed' : ''}">
-                        <img src="${item.imageUrl || ''}" alt="${itemName}" class="item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E'">
-                        <div class="item-info">
-                            <div class="item-name">${itemName}</div>
-                            <div class="item-details">${itemCondition}</div>
-                            <div class="item-price">${priceDisplay}</div>
-                            ${isClaimed ? '<div class="item-claimed">Claimed</div>' : ''}
-                        </div>
-                    </a>
-                `;
-            }).join('');
-        }
-
-        // Event listeners
-        document.getElementById('filterCategory').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('filterCondition').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('filterMyItems').addEventListener('change', function() {
-            this.classList.toggle('active', this.value !== '');
-            renderItems();
-        });
-        
-        document.getElementById('sortBy').addEventListener('change', renderItems);
-
-        // Load items on page load
         loadItems();
     </script>
 </body>
