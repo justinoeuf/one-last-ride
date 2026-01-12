@@ -190,6 +190,10 @@
                         <span class="detail-label">Condition:</span>
                         <span id="itemCondition"></span>
                     </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Category:</span>
+                        <span id="itemCategory"></span>
+                    </div>
                     <div class="price" id="itemPrice"></div>
                     
                     <div class="item-description" id="itemDescription"></div>
@@ -205,7 +209,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4ZOdZ0EbA33tAH9pw3R0Bm8_cigFrhN5ngPqqjlDXiB2J5FBEWRsjnJljuQMa8FcjMQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
         
         // Get user info
         const userName = localStorage.getItem('partyName');
@@ -260,12 +264,12 @@
             document.getElementById('itemImage').alt = item.item;
             document.getElementById('itemName').textContent = item.item;
             document.getElementById('itemCondition').textContent = item.condition;
-            // document.getElementById('itemCategory').textContent = item.category;
+            document.getElementById('itemCategory').textContent = item.category;
             document.getElementById('itemPrice').textContent = item.price === 'FREE' ? 'FREE' : `$${item.price}`;
             document.getElementById('itemDescription').textContent = item.description || 'No description provided.';
 
             // Check if item is claimed
-            const isClaimed = item.status === 'Claimed';
+            const isClaimed = item.status === 'Already Claimed';
             const isClaimedByMe = item.claimedBy === userName;
             
             // Check if user is interested
