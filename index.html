@@ -158,6 +158,10 @@
             max-width: 320px;
             box-shadow: 4px 4px 0px #ccc;
         }
+        
+        .business-card.hidden-card {
+            display: none;
+        }
 
         .alias-name {
             font-size: 32px;
@@ -234,7 +238,7 @@
 
         <!-- Alias Section -->
         <div class="alias-section hidden" id="aliasSection">
-            <div class="business-card">
+            <div class="business-card" id="businessCard">
                 <div class="alias-name" id="aliasDisplay"></div>
                 <div class="pronunciation" id="pronunciationDisplay"></div>
             </div>
@@ -264,6 +268,7 @@
         const pronunciationDisplay = document.getElementById('pronunciationDisplay');
         const greetingText = document.getElementById('greetingText');
         const finishBtn = document.getElementById('finishBtn');
+        const businessCard = document.getElementById('businessCard');
 
         let selectedName = '';
         let isAddingNew = false;
@@ -510,7 +515,12 @@
             
             // Display alias
             aliasDisplay.textContent = alias;
-            pronunciationDisplay.textContent = pronunciation;
+            
+            if (pronunciation) {
+                pronunciationDisplay.textContent = 'Pronounced ' + pronunciation + '. Beyond this, for the sake of everyone, accents are discouraged';
+            } else {
+                pronunciationDisplay.textContent = 'For the sake of everyone, accents are discouraged';
+            }
             greetingText.innerHTML = `Nice to meet you <strong>${alias}</strong>! That's all for now. Make sure you pick up your name when you arrive for the party. If you are staying for the game, there will also be a wallet under your name.<br><br>Click finish to go to the main page, where the game instructions will be when the game starts. Also, if you want any of my stuff, you'll find it there too. —<em>Justin</em>.`;
             
             // Show alias section and scroll
