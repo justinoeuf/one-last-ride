@@ -358,7 +358,7 @@
             emptyState.style.display = 'none';
 
             itemsGrid.innerHTML = items.map(function(item) {
-                const isClaimed = item.status === 'Claimed';
+                const isClaimed = item.status === 'Already Claimed';
                 const priceDisplay = item.price === 'FREE' ? 'FREE' : '$' + item.price;
                 const itemName = item.item || 'Untitled';
                 const itemCondition = item.condition || 'N/A';
