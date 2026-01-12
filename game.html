@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            color: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 24px;
+            height: 24px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .home-link:hover {
+            opacity: 0.7;
+        }
+
+        .home-icon {
+            width: 24px;
+            height: 24px;
+            fill: #000;
+        }
+
+        .message {
+            font-size: 24px;
+            text-align: center;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <a href="home.html" class="home-link">
+        <svg class="home-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+    </a>
+
+    <div class="message">
+        This page won't go live until Friday 10pm.
+    </div>
+
+    <script>
+        // Redirect if not logged in
+        const userName = localStorage.getItem('partyName');
+        if (!userName) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
