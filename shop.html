@@ -109,19 +109,14 @@
         .items-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+            gap: 16px;
             margin-bottom: 40px;
         }
 
-        @media (max-width: 768px) {
+        @media (min-width: 769px) {
             .items-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .items-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
             }
         }
 
@@ -199,8 +194,8 @@
     </a>
 
     <div class="container">
-        <h1>Please take my stuff</h1>
-        <p class="subtitle">Most items are FREE unless otherwise noted. CLAIM items you can take home on or before January 17th. Items marked as INTERESTED will be first come first served up until February 3rd.</p>
+        <h1>Please take my junk</h1>
+        <p class="subtitle">Most items are FREE unless otherwise noted. I'll be adding stuff as I continue to pack this week. "Claim" items you're able to take home by this Saturday. Mark an item as "interested" otherwise. First come first served.</p>
 
         <div class="controls">
             <div class="control-group">
@@ -212,7 +207,7 @@
                     <option value="accessories">Accessories</option>
                     <option value="books">Books</option>
                     <option value="furniture">Furniture</option>
-                    <option value="cookware">Cookware</option>
+                    <option value="kitchen">Kitchen</option>
                     <option value="misc">Misc</option>
                 </select>
             </div>
@@ -250,7 +245,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz4ZOdZ0EbA33tAH9pw3R0Bm8_cigFrhN5ngPqqjlDXiB2J5FBEWRsjnJljuQMa8FcjMQ/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPuryFhmcvkUD3rbQdq-cG6aF1SWKWedZ4lh7l6mrlKEDPBaCyG_h424xynSSTKr7BhA/exec';
         
         // Get user info
         const userAlias = localStorage.getItem('partyAlias') || localStorage.getItem('partyName') || 'Guest';
@@ -263,7 +258,12 @@
         }
 
         let allItems = [];
-        const conditionOrder = ['Brand new', 'Like new', 'Good', 'Acceptable'];
+        const conditionOrder = ['Brand new', 'Like new', 'Good', 'Acceptable', 'Mixed'];
+
+        // Save scroll position before navigating
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('shopScrollPosition', window.scrollY);
+        });
 
         // Load items
         async function loadItems() {
@@ -281,6 +281,13 @@
                 console.log('First item:', allItems[0]);
                 renderItems();
                 document.getElementById('loadingMessage').style.display = 'none';
+                
+                // Restore scroll position
+                const savedPosition = sessionStorage.getItem('shopScrollPosition');
+                if (savedPosition) {
+                    window.scrollTo(0, parseInt(savedPosition));
+                    sessionStorage.removeItem('shopScrollPosition');
+                }
 
             } catch (error) {
                 console.error('Error loading items:', error);
@@ -309,7 +316,12 @@
             }
 
             if (filterCondition) {
-                items = items.filter(item => item.condition === filterCondition);
+                items = items.filter(item => {
+                    // Normalize both sides for comparison (trim whitespace, case-insensitive)
+                    const itemCondition = (item.condition || '').trim();
+                    const filterValue = filterCondition.trim();
+                    return itemCondition === filterValue;
+                });
             }
 
             if (filterMyItems === 'my-items') {
@@ -323,9 +335,131 @@
             // Apply sorting
             if (sortBy === 'price') {
                 items.sort((a, b) => {
-                    const priceA = a.price === 'FREE' ? 0 : parseFloat(a.price.toString().replace('$', ''));
-                    const priceB = b.price === 'FREE' ? 0 : parseFloat(b.price.toString().replace('$', ''));
-                    return priceA - priceB;
+                    const priceA = a.price === 'FREE' ? 0 : parseFloat(a.price.toString().replace('
+
+            // Render
+            if (items.length === 0) {
+                itemsGrid.innerHTML = '';
+                itemsGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                
+                if (filterMyItems === 'my-items') {
+                    emptyState.textContent = "You haven't claimed or marked interest in any items yet";
+                } else {
+                    emptyState.textContent = "Either I haven't uploaded it yet or I don't have what you're looking for";
+                }
+                return;
+            }
+
+            itemsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            itemsGrid.innerHTML = items.map(item => {
+                const isClaimed = item.status === 'Claimed';
+                const priceDisplay = item.price === 'FREE' ? 'FREE' : `${item.price}`;
+                const itemName = item.item || 'Untitled';
+                const itemCondition = item.condition || 'N/A';
+                
+                return `
+                    <a href="item-detail.html?id=${item.itemId}" class="item-card ${isClaimed ? 'claimed' : ''}">
+                        <img src="${item.imageUrl || ''}" alt="${itemName}" class="item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E'">
+                        <div class="item-info">
+                            <div class="item-name">${itemName}</div>
+                            <div class="item-details">${itemCondition}</div>
+                            <div class="item-price">${priceDisplay}</div>
+                            ${isClaimed ? '<div class="item-claimed">Claimed</div>' : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Event listeners
+        document.getElementById('filterCategory').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('filterCondition').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('filterMyItems').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('sortBy').addEventListener('change', renderItems);
+
+        // Load items on page load
+        loadItems();
+    </script>
+</body>
+</html>, ''));
+                    const priceB = b.price === 'FREE' ? 0 : parseFloat(b.price.toString().replace('
+
+            // Render
+            if (items.length === 0) {
+                itemsGrid.innerHTML = '';
+                itemsGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                
+                if (filterMyItems === 'my-items') {
+                    emptyState.textContent = "You haven't taken any of my stuff yet";
+                } else {
+                    emptyState.textContent = "Yeah, I don't have that";
+                }
+                return;
+            }
+
+            itemsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            itemsGrid.innerHTML = items.map(item => {
+                const isClaimed = item.status === 'Claimed';
+                const priceDisplay = item.price === 'FREE' ? 'FREE' : `${item.price}`;
+                const itemName = item.item || 'Untitled';
+                const itemCondition = item.condition || 'N/A';
+                
+                return `
+                    <a href="item-detail.html?id=${item.itemId}" class="item-card ${isClaimed ? 'claimed' : ''}">
+                        <img src="${item.imageUrl || ''}" alt="${itemName}" class="item-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27200%27 height=%27200%27%3E%3Crect fill=%27%23ddd%27 width=%27200%27 height=%27200%27/%3E%3C/svg%3E'">
+                        <div class="item-info">
+                            <div class="item-name">${itemName}</div>
+                            <div class="item-details">${itemCondition}</div>
+                            <div class="item-price">${priceDisplay}</div>
+                            ${isClaimed ? '<div class="item-claimed">Claimed</div>' : ''}
+                        </div>
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // Event listeners
+        document.getElementById('filterCategory').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('filterCondition').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('filterMyItems').addEventListener('change', function() {
+            this.classList.toggle('active', this.value !== '');
+            renderItems();
+        });
+        
+        document.getElementById('sortBy').addEventListener('change', renderItems);
+
+        // Load items on page load
+        loadItems();
+    </script>
+</body>
+</html>, ''));
+                    return priceB - priceA; // High to low
                 });
             } else if (sortBy === 'condition') {
                 items.sort((a, b) => {
