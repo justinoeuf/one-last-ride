@@ -10,7 +10,6 @@
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Courier New', monospace;
             background-color: #f5f5f5;
@@ -18,7 +17,6 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .home-link {
             position: absolute;
             top: 20px;
@@ -28,30 +26,31 @@
             text-decoration: none;
             cursor: pointer;
         }
-
         .home-link:hover {
             opacity: 0.7;
         }
-
         .home-icon {
             width: 24px;
             height: 24px;
             fill: #000;
         }
-
         .container {
             max-width: 400px;
             margin: 80px auto 0;
             text-align: center;
         }
-
         h1 {
             font-size: 48px;
             font-weight: 400;
             color: #000000;
+            margin-bottom: 12px;
+        }
+        .user-name {
+            font-size: 16px;
+            font-weight: 400;
+            color: #000000;
             margin-bottom: 60px;
         }
-
         .logout-button {
             display: inline-block;
             padding: 12px 24px;
@@ -68,7 +67,6 @@
             transition: background-color 0.2s;
             margin-top: 20px;
         }
-
         .logout-button:hover {
             background-color: #333333;
         }
@@ -80,25 +78,33 @@
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
         </svg>
     </a>
-
     <div class="container">
         <h1 id="aliasDisplay">Guest</h1>
+        <p class="user-name" id="nameDisplay"></p>
         <button class="logout-button" id="logoutBtn">Logout and Unregister</button>
     </div>
-
     <script>
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlKG2IPyyUa777K4gfiofiUpAGMofW1dKCY0pHSz0VuULgEwU8kZFxyCcLF0JdkVS20A/execc';
-
-        // Get user's alias from localStorage
-        const userAlias = localStorage.getItem('partyAlias') || localStorage.getItem('partyName') || 'Guest';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlKG2IPyyUa777K4gfiofiUpAGMofW1dKCY0pHSz0VuULgEwU8kZFxyCcLF0JdkVS20A/exec';
+        
+        // Get user's alias and name from localStorage
+        const userAlias = localStorage.getItem('partyAlias');
         const userName = localStorage.getItem('partyName');
-        document.getElementById('aliasDisplay').textContent = userAlias;
+        
+        // Display alias (or name if no alias, e.g., no-game users)
+        if (userAlias) {
+            document.getElementById('aliasDisplay').textContent = userAlias;
+            document.getElementById('nameDisplay').textContent = userName || '';
+        } else {
+            // No alias means they're not playing the game
+            document.getElementById('aliasDisplay').textContent = userName || 'Guest';
+            document.getElementById('nameDisplay').textContent = '';
+        }
         
         // Redirect to registration if no user data
         if (!userName) {
             window.location.href = 'index.html';
         }
-
+        
         // Handle logout and unregister
         document.getElementById('logoutBtn').addEventListener('click', async function() {
             if (confirm('Are you sure you want to logout and unregister? You will need to register again to access the site.')) {
