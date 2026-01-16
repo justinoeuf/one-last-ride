@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #f5f5f5;
+            color: #000000;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 24px;
+            height: 24px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .home-link:hover {
+            opacity: 0.7;
+        }
+        .home-icon {
+            width: 24px;
+            height: 24px;
+            fill: #000;
+        }
+        .container {
+            max-width: 500px;
+            margin: 80px auto 0;
+            text-align: center;
+            padding-bottom: 60px;
+        }
+        .section {
+            margin-bottom: 60px;
+        }
+        .message {
+            font-size: 16px;
+            text-align: left;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+        .message ul {
+            margin-top: 12px;
+            margin-left: 20px;
+        }
+        .message li {
+            margin-bottom: 8px;
+        }
+        .nav-button {
+            display: inline-block;
+            padding: 16px 48px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            background-color: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .nav-button:hover {
+            background-color: #333333;
+        }
+        .nav-button.disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .button-note {
+            font-size: 13px;
+            color: #666;
+            margin-top: 12px;
+            font-style: italic;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .visa-table {
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        .visa-table img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <a href="home.html" class="home-link">
+        <svg class="home-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+    </a>
+    <div class="container">
+        <!-- Section 1: Intro -->
+        <div class="section" id="section1">
+            <div class="message" id="gameMessage">
+                <span class="loading">Loading...</span>
+            </div>
+            
+            <button class="nav-button" id="nextBtn1">Next</button>
+        </div>
+        
+        <!-- Section 2: Objectives -->
+        <div class="section hidden" id="section2">
+            <div class="message">
+                <strong>Overall objective:</strong> Submit a visa application.
+                <br><br>
+                Winners will be determined by their order of submissions, the accuracy of their applications, how much cash they end up with, and of course, the coolness of their hats/wigs.
+                <br><br>
+                To help you achieve these goals, the necessary steps are sequenced into three parts below. If you complete each step, you'll be successful!
+            </div>
+            
+            <button class="nav-button" id="startBtn">Start</button>
+        </div>
+        
+        <!-- Section 3: Part One -->
+        <div class="section hidden" id="section3">
+            <div class="message">
+                <strong>Part one:</strong> Find your countrymen! There should be 4 of you, and all of you will have the same color name tag.
+            </div>
+            
+            <button class="nav-button" id="nextBtn2">Next</button>
+        </div>
+        
+        <!-- Section 4: Part Two -->
+        <div class="section hidden" id="section4">
+            <div class="message">
+                <strong>Part two:</strong> Determine which country you want to travel to! Work to gather passports for each traveler and enough money to apply for one group visa application.
+                <ul>
+                    <li>Each of you will need your own home-country passport</li>
+                    <li>The group visa rates are listed in the table below</li>
+                    <li>Coins have a universal 2-coins-for-1-banknote exchange rate, and can substitute for any banknote</li>
+                </ul>
+            </div>
+            
+            <div class="visa-table">
+                <img src="images/visa_rates.png" alt="Visa Rates Table">
+            </div>
+            
+            <button class="nav-button" id="nextBtn3">Next</button>
+        </div>
+        
+        <!-- Section 5: Part Three -->
+        <div class="section hidden" id="section5">
+            <div class="message">
+                <strong>Part three:</strong> Complete your visa application, submit it to the Consular Section of the embassy, and pass your interview.
+                <ul>
+                    <li>Visa applications will be located in the upper floor bedroom</li>
+                    <li>Upload a group photo to the Partiful party page feed</li>
+                    <li>The Consular Section is located in the basement floor hallway. Make sure everyone knows their stuff…</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlKG2IPyyUa777K4gfiofiUpAGMofW1dKCY0pHSz0VuULgEwU8kZFxyCcLF0JdkVS20A/exec';
+        
+        // Greeting dictionary
+        const greetingByLanguage = {
+            "Finnish": "Moi, mitä kuuluu? (moy, mee-tah KOO-loo)",
+            "Arabic": "أهلًا، إزيّك؟ (ahlan, izzayyak?)",
+            "Russian": "Привет, как дела? (pree-VYET, kak dye-LAH)",
+            "Hindi": "नमस्ते, कैसे हो? (nuh-MUH-stay, KAY-say hoh?)",
+            "Mandarin Chinese": "你好，你怎么样？ (nee-HOW, nee zen-muh YANG?)",
+            "Japanese": "やあ、元気？ (yah, GEN-kee?)",
+            "Korean": "안녕, 잘 지내? (ahn-NYUNG, jal ji-NAY?)",
+            "Thai": "หวัดดี, สบายดีไหม? (wat-DEE, sa-BYE dee mai?)",
+            "Amharic": "ሰላም፣ እንዴት ነህ? (seh-LAHM, in-DAYT neh?)",
+            "Swahili": "Habari, ukoje? (hah-BAH-ree, oo-KOH-jeh)",
+            "French": "Salut, ça va ? (sah-LOO, sah vah)",
+            "Quechua": "Allillanchu, imaynallan kashanki? (ah-yee-YAHN-choo, ee-mine-AH-yan kah-SHAHN-kee)",
+            "Greek": "Γεια, τι κάνεις; (yah, tee KAH-nees)"
+        };
+        
+        // Redirect if not logged in
+        const userName = localStorage.getItem('partyName');
+        const userAlias = localStorage.getItem('partyAlias');
+        
+        if (!userName) {
+            window.location.href = 'index.html';
+        }
+        
+        // Load participant data to get country and language
+        async function loadParticipantData() {
+            try {
+                const url = `${SCRIPT_URL}?action=getParticipants`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.participants) {
+                    const participant = data.participants.find(p => p.name === userName || p.alias === userAlias);
+                    
+                    if (participant) {
+                        const alias = participant.alias || userAlias || 'Traveler';
+                        const country = participant.country || 'a far away land';
+                        const language = participant.language || 'Finnish';
+                        const greeting = greetingByLanguage[language] || greetingByLanguage['Finnish'];
+                        
+                        document.getElementById('gameMessage').innerHTML = `
+                            Hi, ${alias}, welcome to the International Embassy! You must've travelled a long way from ${country}. Today, your goal is simple: Get approved for travel to the country of your choice!
+                            <br><br>
+                            As you mingle, you may run into a few of your fellow countrymen. Make sure to greet them with a "${greeting}". "Hi, how're you?" also works!
+                        `;
+                    } else {
+                        showFallbackMessage();
+                    }
+                } else {
+                    showFallbackMessage();
+                }
+            } catch (error) {
+                console.error('Error loading participant data:', error);
+                showFallbackMessage();
+            }
+        }
+        
+        function showFallbackMessage() {
+            const alias = userAlias || 'Traveler';
+            document.getElementById('gameMessage').innerHTML = `
+                Hi, ${alias}, welcome to the International Embassy! You must've travelled a long way. Today, your goal is simple: Get approved for travel to the country of your choice!
+                <br><br>
+                As you mingle, you may run into a few of your fellow countrymen. Make sure to greet them warmly. "Hi, how're you?" works great!
+            `;
+        }
+        
+        // Slide to section helper
+        function slideToSection(sectionId) {
+            document.getElementById(sectionId).classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        
+        // Button event listeners
+        document.getElementById('nextBtn1').addEventListener('click', function() {
+            slideToSection('section2');
+        });
+        
+        document.getElementById('startBtn').addEventListener('click', function() {
+            slideToSection('section3');
+        });
+        
+        document.getElementById('nextBtn2').addEventListener('click', function() {
+            slideToSection('section4');
+        });
+        
+        document.getElementById('nextBtn3').addEventListener('click', function() {
+            slideToSection('section5');
+        });
+        
+        // Load data on page load
+        loadParticipantData();
+    </script>
+</body>
+</html>
